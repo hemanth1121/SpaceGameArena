@@ -47,7 +47,10 @@ Dashboard available at `http://localhost:8050`
 - **Concept Summary** (Right Sidebar): Learn about station design and assumptions
 
 ---
+## 📊 Hosting Website:
+- URL: https://space-treasure-portal.lovable.app
 
+  
 ## 📊 Financial Model
 
 ### Baseline Configuration
