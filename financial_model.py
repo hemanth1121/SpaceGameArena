@@ -4,6 +4,10 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import pandas as pd
 
+# Add this import at the top with other imports
+import base64
+from pathlib import Path
+
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 
@@ -55,6 +59,20 @@ TOOLTIPS = {
     'recurring-opex': "Annual recurring operating expenses from Year 2 onwards.",
     'year1-revenue': "Revenue in Year 1 = ticket revenue + sponsorship + broadcasting + VR/AR + merchandising.",
 }
+
+# Add this function after your constants and before the sidebar definitions
+def encode_image(image_path):
+    """Encode image to base64 for display"""
+    try:
+        with open(image_path, 'rb') as f:
+            encoded = base64.b64encode(f.read()).decode()
+        return f"data:image/png;base64,{encoded}"
+    except FileNotFoundError:
+        return None
+
+# Define your image path (modify 'your_image.png' to your actual image filename)
+IMAGE_PATH = Path(__file__).parent / "one_page_finance.png"  # Change filename as needed
+encoded_image = encode_image(IMAGE_PATH)
 
 def create_input_with_tooltip(label, input_id, tooltip_text, input_component):
     return html.Div([
@@ -228,7 +246,7 @@ right_toggle = html.Button("▶", id='right-toggle', style={**TOGGLE_BUTTON_STYL
 # Main Content
 content = html.Div([
     html.H1(
-        "🚀 Arena of the Future: Play in Orbit",
+        "🚀 Space Game Arena: Play in Orbit",
         style={
             'color': '#00CED1',             # DarkTurquoise — vibrant but readable
             'fontSize': '3rem',             # larger font for visibility
@@ -288,6 +306,24 @@ content = html.Div([
             ])
         ])], style={'background': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', 'border': 'none'}), width=3),
     ], className="mb-4"),
+    # ADD these lines right after the above line and BEFORE dcc.Graph:
+html.Div([
+    html.Img(
+        src=encoded_image if encoded_image else "",
+        style={
+            'width': '100%',
+            'maxWidth': '800px',
+            'height': 'auto',
+            'display': 'block',
+            'margin': '0 auto 20px auto',
+            'borderRadius': '10px',
+            'boxShadow': '0 4px 6px rgba(0,0,0,0.3)'
+        }
+    ) if encoded_image else html.Div(
+        "Image not found",
+        style={'textAlign': 'center', 'color': '#ff6b6b', 'marginBottom': '20px'}
+    )
+], style={'marginBottom': '20px'}),
     html.H3("📈 10-Year Trends", className="text-white mb-3"),
     dcc.Graph(id='profit-chart', style={'height': '500px'}),
     html.H3("📋 Projection Table", className="text-white mt-4 mb-3"),
@@ -371,32 +407,27 @@ def update_dashboard(crew_count, contestant_count, include_spectators, spectator
     annual_amortization = manual_amort_M * 1e6 if manual_am else (total_capex / amort_years if use_am else 0.0)
     
     # Profit
-    net_no_amort, net_with_amort = [], []
+    net_no_amort = []
     for i, rev in enumerate(revenues, start=1):
         opex = year1_opex if i == 1 else annual_opex
         capex_this_year = total_capex if (i == 1 and not use_am) else 0.0
         net_no_amort.append(rev - opex - capex_this_year)
-        capex_deduction = annual_amortization if (use_am and i <= amort_years) else 0.0
-        net_with_amort.append(rev - opex - capex_deduction)
     
     # Convert to millions
     revenues_M = [r / 1e6 for r in revenues]
     net_no_amort_M = [n / 1e6 for n in net_no_amort]
-    net_with_amort_M = [n / 1e6 for n in net_with_amort]
     
     # Chart
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=years, y=revenues_M, mode="lines+markers", name="Revenue ($M)", line=dict(color='#00d4ff')))
     fig.add_trace(go.Scatter(x=years, y=net_no_amort_M, mode="lines+markers", name="Net Profit (No Amort) ($M)", line=dict(color='#ff6b6b')))
-    fig.add_trace(go.Scatter(x=years, y=net_with_amort_M, mode="lines+markers", name="Net Profit (With Amort) ($M)", line=dict(color='#51cf66')))
     fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.3)',
                       font=dict(color='white'), xaxis=dict(title="Year", gridcolor='rgba(255,255,255,0.1)'),
                       yaxis=dict(title="Amount ($M)", gridcolor='rgba(255,255,255,0.1)'), legend=dict(bgcolor='rgba(0,0,0,0.5)'))
     
     # Table
     df = pd.DataFrame({"Year": years, "Revenue ($M)": [f"{v:,.0f}" for v in revenues_M],
-                       "Net Profit (No Amort) ($M)": [f"{v:,.0f}" for v in net_no_amort_M],
-                       "Net Profit (With Amort) ($M)": [f"{v:,.0f}" for v in net_with_amort_M]})
+                       "Net Profit (No Amort) ($M)": [f"{v:,.0f}" for v in net_no_amort_M]})
     
     table = dash_table.DataTable(data=df.to_dict('records'), columns=[{"name": i, "id": i} for i in df.columns],
                                  style_table={'overflowX': 'auto'},
