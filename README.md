@@ -47,10 +47,10 @@ Dashboard available at `http://localhost:8050`
 - **Concept Summary** (Right Sidebar): Learn about station design and assumptions
 
 ---
-## 📊 Hosting Website:
+## 📊 Contenstant/Spectator journey:
 - URL: https://space-treasure-portal.lovable.app
+- <img width="1024" height="1024" alt="audience_journey" src="https://github.com/user-attachments/assets/edb01457-7104-4682-8eed-81721222907c" />
 
-  
 ## 📊 Financial Model
 
 ### Baseline Configuration
